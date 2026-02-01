@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For My Favorite Human ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --pink: #ff4d6d; --soft: #ffb3c1; --bg: #fff0f3; }
+        body {
+            margin: 0; padding: 0; font-family: 'Poppins', sans-serif;
+            background: var(--bg); display: flex; justify-content: center;
+            align-items: center; height: 100vh; overflow: hidden; text-align: center;
+        }
+
+        .container {
+            background: white; padding: 30px; border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(255, 77, 109, 0.2);
+            max-width: 450px; width: 90%; z-index: 10;
+        }
+
+        h1 { font-family: 'Pacifico', cursive; color: var(--pink); margin-bottom: 10px; }
+        .hidden { display: none !important; }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 25px; border: none; border-radius: 50px;
+            cursor: pointer; font-size: 1rem; font-weight: 600;
+            transition: 0.3s; margin: 10px;
+        }
+        .btn-yes { background: var(--pink); color: white; box-shadow: 0 4px 15px var(--soft); }
+        .btn-no { background: #eee; color: #888; position: absolute; }
+
+        /* Card Shuffle */
+        .card-stack { position: relative; height: 180px; margin: 20px 0; }
+        .memory-card {
+            position: absolute; background: var(--pink); color: white;
+            padding: 25px; border-radius: 15px; width: 85%; left: 2.5%;
+            border: 2px solid white; cursor: pointer;
+            transition: transform 0.4s, opacity 0.4s; font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Hot Wheels Game Canvas */
+        #game-canvas {
+            background: #fdf2f4; border: 3px dashed var(--pink);
+            display: block; margin: 10px auto; border-radius: 15px;
+        }
+
+        /* Confetti */
+        .confetti { position: absolute; width: 10px; height: 10px; animation: fall 3s linear forwards; z-index: 100; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="winSound">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2020/success-fanfare-trumpets-618.wav" type="audio/wav">
+    </audio>
+    <audio id="collectSound">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2013/magic-marimba-notif-225.wav" type="audio/wav">
+    </audio>
+
+    <div id="stage1" class="container">
+        <h1>Will you be my Valentine?</h1>
+        <div style="height: 120px; position: relative; margin-top: 20px;">
+            <button class="btn btn-yes" onclick="nextStage(2)">YES!</button>
+            <button id="noBtn" class="btn btn-no" onmouseover="moveNo()">No</button>
+        </div>
+    </div>
+
+    <div id="stage2" class="container hidden">
+        <h1>I knew it! 😉</h1>
+        <p>No escaping me. Read this...</p>
+        <div style="background: #fffafa; padding: 20px; border-left: 5px solid var(--pink); border-radius: 10px; text-align: left;">
+            <p>Thank you for coming into my life. You make everything brighter and my heart is so incredibly full because of you. ❤️</p>
+        </div>
+        <button class="btn btn-yes" style="margin-top:20px" onclick="nextStage(3)">Why I Love You →</button>
+    </div>
+
+    <div id="stage3" class="container hidden">
+        <h1>My Reasons</h1>
+        <div class="card-stack" id="cardStack">
+            <div class="memory-card" onclick="shuffleCard(this)">Your heart is pure gold.</div>
+            <div class="memory-card" onclick="shuffleCard(this)">The way you care for me is unmatched.</div>
+            <div class="memory-card" onclick="shuffleCard(this)">Best gamer partner in the world.</div>
+            <div class="memory-card" onclick="shuffleCard(this)">You are my favorite person forever! 🏎️💨</div>
+        </div>
+        <p style="font-size: 0.8rem; color: #888;">(Click to shuffle cards)</p>
+        <button class="btn btn-yes" onclick="nextStage(4)">The Final Challenge!</button>
+    </div>
+
+    <div id="stage4" class="container hidden">
+        <h1>Hot Wheels Collector</h1>
+        <p>Catch 10 cars to win!</p>
+        <div id="game-score" style="color: var(--pink); font-weight: bold; font-size: 1.2rem;">Cars: 0/10</div>
+        <canvas id="game-canvas" width="300" height="300"></canvas>
+        <p style="font-size: 0.8rem; color: #888;">Click Left/Right side to drive</p>
+    </div>
+
+    <div id="stage5" class="container hidden">
+        <h1 style="font-size: 4rem;">🏆</h1>
+        <h1>CHAMPION!</h1>
+        <p>You are officially the</p>
+        <h2 style="color: var(--pink); font-family: 'Pacifico';">Best Boyfriend in the World</h2>
+        <p>❤️ 🏎️💨 ❤️</p>
+    </div>
+
+    <script>
+        function nextStage(n) {
+            document.querySelectorAll('.container').forEach(c => c.classList.add('hidden'));
+            document.getElementById('stage' + n).classList.remove('hidden');
+            
+            if (n === 2) {
+                document.getElementById('bgMusic').play().catch(() => {});
+                spawnConfetti();
+            }
+            if (n === 4) initGame();
+            if (n === 5) {
+                document.getElementById('bgMusic').pause();
+                document.getElementById('winSound').play();
+                spawnConfetti();
+            }
+        }
+
+        function moveNo() {
+            const btn = document.getElementById('noBtn');
+            btn.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+            btn.style.top = Math.random() * (window.innerHeight - 50) + 'px';
+        }
+
+        function shuffleCard(card) {
+            card.style.transform = "translateX(160%) rotate(20deg)";
+            card.style.opacity = "0";
+            setTimeout(() => {
+                card.style.zIndex = -1;
+                card.parentNode.prepend(card);
+                setTimeout(() => {
+                    card.style.transform = "translateX(0) rotate(0deg)";
+                    card.style.opacity = "1";
+                    document.querySelectorAll('.memory-card').forEach((c, i) => c.style.zIndex = i);
+                }, 50);
+            }, 300);
+        }
+
+        function initGame() {
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
+            let score = 0;
+            let playerX = 130;
+            let fallingItems = [];
+            const carEmojis = ['🏎️', '🚗', '🚙', '🏎️', '🏎️'];
+
+            canvas.addEventListener('mousedown', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                if (clickX < 150) playerX = Math.max(10, playerX - 50);
+                else playerX = Math.min(250, playerX + 50);
+            });
+
+            function update() {
+                ctx.clearRect(0, 0, 300, 300);
+                
+                // Draw Lane Lines
+                ctx.strokeStyle = "#ffe5ec";
+                ctx.setLineDash([10, 10]);
+                ctx.beginPath(); ctx.moveTo(100,0); ctx.lineTo(100,300); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(200,0); ctx.lineTo(200,300); ctx.stroke();
+
+                // Draw Player
+                ctx.font = "40px Arial";
+                ctx.fillText("🏎️", playerX, 280);
+
+                // Draw Falling Cars
+                fallingItems.forEach((car, i) => {
+                    car.y += 4;
+                    ctx.font = "30px Arial";
+                    ctx.fillText(car.emoji, car.x, car.y);
+
+                    if (car.y > 240 && car.y < 290 && Math.abs(car.x - playerX) < 35) {
+                        fallingItems.splice(i, 1);
+                        score++;
+                        document.getElementById('collectSound').play();
+                        document.getElementById('game-score').innerText = `Cars: ${score}/10`;
+                        if (score >= 10) nextStage(5);
+                    }
+                    if (car.y > 300) fallingItems.splice(i, 1);
+                });
+
+                if (Math.random() < 0.04) fallingItems.push({ x: Math.random() * 250 + 10, y: -30, emoji: carEmojis[Math.floor(Math.random()*5)] });
+                if (score < 10) requestAnimationFrame(update);
+            }
+            update();
+        }
+
+        function spawnConfetti() {
+            for (let i = 0; i < 60; i++) {
+                const c = document.createElement('div');
+                c.className = 'confetti';
+                c.style.left = Math.random() * 100 + 'vw';
+                c.style.background = ['#ff4d6d', '#ffb3c1', '#ffd700'][Math.floor(Math.random()*3)];
+                c.style.top = '-10px';
+                c.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(c);
+                setTimeout(() => c.remove(), 3000);
+            }
+        }
+    </script>
+</body>
+</html>
